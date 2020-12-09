@@ -51,16 +51,36 @@ func (p *v1PodResourcesServer) List(ctx context.Context, req *v1.ListPodResource
 
 	for i, pod := range pods {
 		pRes := v1.PodResources{
-			Name:       pod.Name,
-			Namespace:  pod.Namespace,
-			Containers: make([]*v1.ContainerResources, len(pod.Spec.Containers)),
+			Name:        pod.Name,
+			Namespace:   pod.Namespace,
+			Containers:  make([]*v1.ContainerResources, len(pod.Spec.Containers)),
+			Annotations: make(map[string]string, len(pod.Annotations)),
+		}
+
+		for key, value := range pod.Annotations {
+			pRes.Annotations[key] = value
 		}
 
 		for j, container := range pod.Spec.Containers {
 			pRes.Containers[j] = &v1.ContainerResources{
-				Name:    container.Name,
-				Devices: p.devicesProvider.GetDevices(string(pod.UID), container.Name),
-				CpuIds:  p.cpusProvider.GetCPUs(string(pod.UID), container.Name),
+				Name:     container.Name,
+				Devices:  p.devicesProvider.GetDevices(string(pod.UID), container.Name),
+				CpuIds:   p.cpusProvider.GetCPUs(string(pod.UID), container.Name),
+				Requests: make(map[string]int64, len(container.Resources.Requests)),
+				Limits:   make(map[string]int64, len(container.Resources.Limits)),
+			}
+
+			for name, quantity := range container.Resources.Requests {
+				value, ok := quantity.AsInt64()
+				if ok {
+					pRes.Containers[j].Requests[string(name)] = value
+				}
+			}
+			for name, quantity := range container.Resources.Limits {
+				value, ok := quantity.AsInt64()
+				if ok {
+					pRes.Containers[j].Limits[string(name)] = value
+				}
 			}
 		}
 		podResources[i] = &pRes

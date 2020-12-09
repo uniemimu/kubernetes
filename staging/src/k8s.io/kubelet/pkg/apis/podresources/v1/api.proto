@@ -33,6 +33,7 @@ message PodResources {
     string name = 1;
     string namespace = 2;
     repeated ContainerResources containers = 3;
+    map<string, string> annotations = 4;
 }
 
 // ContainerResources contains information about the resources assigned to a container
@@ -40,6 +41,8 @@ message ContainerResources {
     string name = 1;
     repeated ContainerDevices devices = 2;
     repeated int64 cpu_ids = 3;
+    map<string, int64> requests = 4;
+    map<string, int64> limits = 5;
 }
 
 // ContainerDevices contains information about the devices assigned to a container
